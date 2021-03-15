@@ -26,6 +26,7 @@ var formatClassMethodParams = function (params) {
 module.exports = function (_a) {
     var t = _a.types;
     var firstDecorator = function (node) { var _a; return (_a = node === null || node === void 0 ? void 0 : node.decorators) === null || _a === void 0 ? void 0 : _a[0]; };
+    var allDecorators = function (node) { return (node === null || node === void 0 ? void 0 : node.decorators) || []; };
     var decoratorName = function (decorator) { return decorator === null || decorator === void 0 ? void 0 : decorator.expression.callee.name; };
     var decoratorArguments = function (decorator) {
         return decorator === null || decorator === void 0 ? void 0 : decorator.expression.arguments.map(function (arg) {
@@ -38,14 +39,18 @@ module.exports = function (_a) {
         });
     };
     var className = null;
+    var isClassBlueprintComponent = false;
     return {
         visitor: {
             ClassDeclaration: function (path) {
+                var _a;
                 var properties = [];
                 className = path.node.id.name;
                 var classBody = path.node.body;
                 var isUClass = decoratorName(firstDecorator(path.node)) === "UCLASS";
                 if (isUClass) {
+                    var classArguments = (_a = firstDecorator(path.node)) === null || _a === void 0 ? void 0 : _a.expression.arguments;
+                    isClassBlueprintComponent = classArguments.some(function (arg) { return arg.name === 'BlueprintComponent'; });
                     classBody.body.forEach(function (value) {
                         var _a, _b;
                         var firstDecoratorName = decoratorName(firstDecorator(value));
@@ -107,6 +112,11 @@ module.exports = function (_a) {
                     !t.isClassDeclaration(path.parentPath.node) &&
                     !t.isCallExpression(path.parentPath.node)) {
                     path.node.name = className + "_COMPILED";
+                }
+            },
+            ExportDeclaration: function (path) {
+                if (isClassBlueprintComponent) {
+                    path.remove();
                 }
             }
         }

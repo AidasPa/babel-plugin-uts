@@ -35,6 +35,7 @@ const formatClassMethodParams = (params: any[]) =>
 
 export = ({ types: t }: { types: typeof types }) => {
   const firstDecorator = (node) => node?.decorators?.[0];
+  const allDecorators = (node) => node?.decorators || [];
   const decoratorName = (decorator) => decorator?.expression.callee.name;
   const decoratorArguments = (decorator) => {
     return decorator?.expression.arguments.map((arg) => {
@@ -49,6 +50,7 @@ export = ({ types: t }: { types: typeof types }) => {
   };
 
   let className = null;
+  let isClassBlueprintComponent = false;
 
   return {
     visitor: {
@@ -60,6 +62,9 @@ export = ({ types: t }: { types: typeof types }) => {
         const isUClass = decoratorName(firstDecorator(path.node)) === "UCLASS";
 
         if (isUClass) {
+          const classArguments: any[] = firstDecorator(path.node)?.expression.arguments;
+          isClassBlueprintComponent = classArguments.some((arg) => arg.name === 'BlueprintComponent');
+
           classBody.body.forEach((value: any) => {
             const firstDecoratorName = decoratorName(firstDecorator(value));
             const firstDecoratorArguments = decoratorArguments(
@@ -172,6 +177,11 @@ export = ({ types: t }: { types: typeof types }) => {
           path.node.name = `${className}_COMPILED`;
         }
       },
+      ExportDeclaration(path: any) {
+        if(isClassBlueprintComponent) {
+          path.remove();
+        }
+      }
     },
   };
 };

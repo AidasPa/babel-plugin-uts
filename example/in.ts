@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-@UCLASS()
+@UCLASS(BlueprintComponent)
 class MyCharacter extends Character {
   @UPROPERTY(EditAnywhere)
   CameraBoom: SpringArmComponent;
@@ -106,44 +106,6 @@ class MyCharacter extends Character {
   }
 }
 
+new MyCharacter(GWorld);
 
-class SomeCharacter extends MyCharacter {
-  /**
-   * Assume you have 90 seconds with a new user before they decide to use your app or delete it.
-   *
-   * SomeCharacter's Constructor
-   */
-  constructor(GWorld: World, Location: Vector) {
-    super(GWorld, Location);
-
-    this.CharacterMovement.MaxWalkSpeed = 250;
-
-    this.Mesh.SetSkeletalMesh(
-      SkeletalMesh.Load(
-       ""
-      ),
-      true
-    );
-    this.Mesh.SetAnimClass(
-      AnimBlueprint.Load(
-        ""
-      ).GeneratedClass
-    );
-  }
-
-  Attack() {
-    super.Attack();
-    
-    GWorld.BeginDeferredActorSpawnFromClass(
-      SpikeProjectile,
-      this.GetTransform(),
-      ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
-      this
-    ).FinishSpawningActor(this.GetTransform());
-  }
-}
-
-const spawn = Vector.MakeVector(-970, -346, 202);
-if (GWorld.IsServer()) {
-  new SomeCharacter(GWorld, spawn);
-}
+export default MyCharacter;
