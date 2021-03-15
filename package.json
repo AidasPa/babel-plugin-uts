@@ -1,0 +1,17 @@
+{
+  "name": "@aidaspa/babel-plugin-uts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "watch": "tsc -w --outDir dist src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/parser": "^7.13.10",
+    "@babel/types": "^7.13.0"
+  }
+}
