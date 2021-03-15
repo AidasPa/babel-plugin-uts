@@ -3,6 +3,9 @@ var babelParser = require("@babel/parser");
 var getCompiledClassExpression = function (className) {
     return babelParser.parse("const " + className + "_COMPILED = require('uclass')()(global, " + className + ");");
 };
+var getBootstrapExpression = function () {
+    return babelParser.parse("Context.RunFile('aliases.js');Context.RunFile('polyfill/unrealengine.js');Context.RunFile('polyfill/timers.js');");
+};
 var friendlyTypeAnnotation = function (type) {
     switch (type.typeAnnotation.typeAnnotation.type) {
         case "TSNumberKeyword":
@@ -38,6 +41,13 @@ module.exports = function (_a) {
     var className = null;
     return {
         visitor: {
+            Program: {
+                enter: function (path) {
+                    var _a;
+                    (_a = path.node.body).unshift.apply(_a, getBootstrapExpression().program.body);
+                    // getBootstrapExpression().program.body.forEach((statement) => path.node.body.uns)
+                }
+            },
             ClassDeclaration: function (path) {
                 className = path.node.id.name;
                 var classBody = path.node.body;
