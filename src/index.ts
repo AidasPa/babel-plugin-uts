@@ -34,8 +34,6 @@ const formatClassMethodParams = (params: any[]) =>
   });
 
 export = ({ types: t }: { types: typeof types }) => {
-  const properties = [];
-
   const firstDecorator = (node) => node?.decorators?.[0];
   const decoratorName = (decorator) => decorator?.expression.callee.name;
   const decoratorArguments = (decorator) => {
@@ -55,6 +53,8 @@ export = ({ types: t }: { types: typeof types }) => {
   return {
     visitor: {
       ClassDeclaration(path: any) {
+        const properties = [];
+
         className = path.node.id.name;
         const classBody: types.ClassBody = path.node.body;
         const isUClass = decoratorName(firstDecorator(path.node)) === "UCLASS";
@@ -68,7 +68,10 @@ export = ({ types: t }: { types: typeof types }) => {
 
             if (t.isClassProperty(value)) {
               const isUProperty = firstDecoratorName === "UPROPERTY";
-              if (isUProperty) {
+              const hasType =
+                value.typeAnnotation?.typeAnnotation?.type || false;
+
+              if (isUProperty && hasType) {
                 properties.push({
                   property: value,
                   decoratorArguments: firstDecoratorArguments,
@@ -124,28 +127,31 @@ export = ({ types: t }: { types: typeof types }) => {
             value.decorators = [];
           });
 
-          // create the properties method
-          classBody.body.push(
-            t.classMethod(
-              "method",
-              t.identifier("properties"),
-              [],
-              t.blockStatement(
-                properties.map(({ property, decoratorArguments }) => {
-                  const identifier = t.identifier(
-                    property.key.name +
-                      ` /*${decoratorArguments.join(
-                        "+"
-                      )}+${friendlyTypeAnnotation(property)}*/`
-                  );
+          // create the properties method if we have some properties
 
-                  return t.expressionStatement(
-                    t.memberExpression(t.thisExpression(), identifier)
-                  );
-                })
+          if (properties.length > 0) {
+            classBody.body.push(
+              t.classMethod(
+                "method",
+                t.identifier("properties"),
+                [],
+                t.blockStatement(
+                  properties.map(({ property, decoratorArguments }) => {
+                    const identifier = t.identifier(
+                      property.key.name +
+                        ` /*${decoratorArguments.join(
+                          "+"
+                        )}+${friendlyTypeAnnotation(property)}*/`
+                    );
+
+                    return t.expressionStatement(
+                      t.memberExpression(t.thisExpression(), identifier)
+                    );
+                  })
+                )
               )
-            )
-          );
+            );
+          }
 
           // clear the decorators because if we don't TS will do all kinds of crap
           path.node.decorators = [];

@@ -6,7 +6,7 @@ class MyCharacter extends Character {
   CameraBoom: SpringArmComponent;
 
   @UPROPERTY(EditAnywhere)
-  FollowCamera: CameraComponent;
+  FollowCamera;
 
   /**
    * The way to get started is to quit talking and begin doing.
@@ -106,4 +106,44 @@ class MyCharacter extends Character {
   }
 }
 
-export default MyCharacter;
+
+class SomeCharacter extends MyCharacter {
+  /**
+   * Assume you have 90 seconds with a new user before they decide to use your app or delete it.
+   *
+   * SomeCharacter's Constructor
+   */
+  constructor(GWorld: World, Location: Vector) {
+    super(GWorld, Location);
+
+    this.CharacterMovement.MaxWalkSpeed = 250;
+
+    this.Mesh.SetSkeletalMesh(
+      SkeletalMesh.Load(
+       ""
+      ),
+      true
+    );
+    this.Mesh.SetAnimClass(
+      AnimBlueprint.Load(
+        ""
+      ).GeneratedClass
+    );
+  }
+
+  Attack() {
+    super.Attack();
+    
+    GWorld.BeginDeferredActorSpawnFromClass(
+      SpikeProjectile,
+      this.GetTransform(),
+      ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
+      this
+    ).FinishSpawningActor(this.GetTransform());
+  }
+}
+
+const spawn = Vector.MakeVector(-970, -346, 202);
+if (GWorld.IsServer()) {
+  new SomeCharacter(GWorld, spawn);
+}
