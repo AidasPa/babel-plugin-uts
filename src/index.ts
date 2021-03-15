@@ -8,7 +8,9 @@ const getCompiledClassExpression = (className: string) =>
   );
 
 const getBootstrapExpression = () =>
-    babelParser.parse(`Context.RunFile('aliases.js');Context.RunFile('polyfill/unrealengine.js');Context.RunFile('polyfill/timers.js');`);
+  babelParser.parse(
+    `Context.RunFile('aliases.js');Context.RunFile('polyfill/unrealengine.js');Context.RunFile('polyfill/timers.js');`
+  );
 
 const friendlyTypeAnnotation = (type: any) => {
   switch (type.typeAnnotation.typeAnnotation.type) {
@@ -52,12 +54,6 @@ export = ({ types: t }: { types: typeof types }) => {
 
   return {
     visitor: {
-      Program: {
-        enter(path) {
-          path.node.body.unshift(...getBootstrapExpression().program.body);
-          // getBootstrapExpression().program.body.forEach((statement) => path.node.body.uns)
-        }
-      },
       ClassDeclaration(path: any) {
         className = path.node.id.name;
         const classBody: types.ClassBody = path.node.body;
@@ -116,9 +112,12 @@ export = ({ types: t }: { types: typeof types }) => {
             }
 
             if (value.kind === "constructor") {
-              value.body.body = value.body.body.filter((bodyNode: types.ExpressionStatement) => !t.isSuper(bodyNode.expression.callee))
+              value.body.body = value.body.body.filter(
+                (bodyNode: types.ExpressionStatement) =>
+                  !t.isSuper(bodyNode.expression.callee)
+              );
               value.params = [];
-              
+
               value.key.name = "ctor";
             }
 
@@ -153,10 +152,17 @@ export = ({ types: t }: { types: typeof types }) => {
 
           // insert the compiled class
           path.insertAfter(getCompiledClassExpression(className));
+
+          // insert the polyfills
+          path.insertBefore(getBootstrapExpression().program.body);
         }
       },
       Identifier(path: any) {
-        if (path.node.name === className && !t.isClassDeclaration(path.parentPath.node) && !t.isCallExpression(path.parentPath.node)) {
+        if (
+          path.node.name === className &&
+          !t.isClassDeclaration(path.parentPath.node) &&
+          !t.isCallExpression(path.parentPath.node)
+        ) {
           path.node.name = `${className}_COMPILED`;
         }
       },

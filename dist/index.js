@@ -41,13 +41,6 @@ module.exports = function (_a) {
     var className = null;
     return {
         visitor: {
-            Program: {
-                enter: function (path) {
-                    var _a;
-                    (_a = path.node.body).unshift.apply(_a, getBootstrapExpression().program.body);
-                    // getBootstrapExpression().program.body.forEach((statement) => path.node.body.uns)
-                }
-            },
             ClassDeclaration: function (path) {
                 className = path.node.id.name;
                 var classBody = path.node.body;
@@ -82,7 +75,9 @@ module.exports = function (_a) {
                             }
                         }
                         if (value.kind === "constructor") {
-                            value.body.body = value.body.body.filter(function (bodyNode) { return !t.isSuper(bodyNode.expression.callee); });
+                            value.body.body = value.body.body.filter(function (bodyNode) {
+                                return !t.isSuper(bodyNode.expression.callee);
+                            });
                             value.params = [];
                             value.key.name = "ctor";
                         }
@@ -99,10 +94,14 @@ module.exports = function (_a) {
                     path.node.decorators = [];
                     // insert the compiled class
                     path.insertAfter(getCompiledClassExpression(className));
+                    // insert the polyfills
+                    path.insertBefore(getBootstrapExpression().program.body);
                 }
             },
             Identifier: function (path) {
-                if (path.node.name === className && !t.isClassDeclaration(path.parentPath.node) && !t.isCallExpression(path.parentPath.node)) {
+                if (path.node.name === className &&
+                    !t.isClassDeclaration(path.parentPath.node) &&
+                    !t.isCallExpression(path.parentPath.node)) {
                     path.node.name = className + "_COMPILED";
                 }
             }
