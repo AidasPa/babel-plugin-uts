@@ -1,6 +1,6 @@
 {
   "name": "@aidaspa/babel-plugin-uts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A compiler for the @aidspa/uts package",
   "main": "dist/index.js",
   "scripts": {
