@@ -50,11 +50,11 @@ export = ({ types: t }: { types: typeof types }) => {
   };
 
   let className = null;
-  let isClassBlueprintComponent = false;
-
+  
   return {
     visitor: {
       ClassDeclaration(path: any) {
+        let isClassBlueprintComponent = false;
         const properties = [];
 
         className = path.node.id.name;
@@ -166,6 +166,9 @@ export = ({ types: t }: { types: typeof types }) => {
 
           // insert the polyfills
           path.insertBefore(getBootstrapExpression().program.body);
+        
+          path.parentPath.node.body = path.parentPath.node.body.filter((node: Node) => !(t.isExportDeclaration(node) && isClassBlueprintComponent));
+          
         }
       },
       Identifier(path: any) {
@@ -177,11 +180,6 @@ export = ({ types: t }: { types: typeof types }) => {
           path.node.name = `${className}_COMPILED`;
         }
       },
-      ExportDeclaration(path: any) {
-        if(isClassBlueprintComponent) {
-          path.remove();
-        }
-      }
     },
   };
 };

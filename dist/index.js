@@ -39,11 +39,11 @@ module.exports = function (_a) {
         });
     };
     var className = null;
-    var isClassBlueprintComponent = false;
     return {
         visitor: {
             ClassDeclaration: function (path) {
                 var _a;
+                var isClassBlueprintComponent = false;
                 var properties = [];
                 className = path.node.id.name;
                 var classBody = path.node.body;
@@ -105,6 +105,7 @@ module.exports = function (_a) {
                     path.insertAfter(getCompiledClassExpression(className));
                     // insert the polyfills
                     path.insertBefore(getBootstrapExpression().program.body);
+                    path.parentPath.node.body = path.parentPath.node.body.filter(function (node) { return !(t.isExportDeclaration(node) && isClassBlueprintComponent); });
                 }
             },
             Identifier: function (path) {
@@ -112,11 +113,6 @@ module.exports = function (_a) {
                     !t.isClassDeclaration(path.parentPath.node) &&
                     !t.isCallExpression(path.parentPath.node)) {
                     path.node.name = className + "_COMPILED";
-                }
-            },
-            ExportDeclaration: function (path) {
-                if (isClassBlueprintComponent) {
-                    path.remove();
                 }
             }
         }
